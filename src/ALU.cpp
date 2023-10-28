@@ -24,3 +24,9 @@ int ALU::operation(int operand1, int operand2, bitset<4> ALUOp){
   }
   return ALUResult;
 }
+
+bool ALU::LT(int ALUResult){
+  if (ALUResult < 0) // reg[rs1] < reg[rs2]
+    return true;
+  return false;
+}

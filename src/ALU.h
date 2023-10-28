@@ -8,4 +8,5 @@ using namespace std;
 class ALU {
 public:
 	int operation(int operand1, int operand2, bitset<4> ALUOp);
+  bool LT(int ALUResult);
 };

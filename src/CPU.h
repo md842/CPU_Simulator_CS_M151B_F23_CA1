@@ -18,7 +18,7 @@ class CPU {
 private:
   int regFile[32]; // RegFile
   ALU myALU; // ALU
-	int dmemory[4096]; // Data memory, byte addressable in little endian fashion
+	char dmemory[4096]; // Data memory, byte addressable in little endian fashion
 	unsigned long PC; // PC
   bitset<6> controller; // Controller
   bitset<4> ALUOp;
@@ -26,6 +26,8 @@ private:
 public:
 	CPU();
 	unsigned long readPC();
+  void writePC(int override);
+  void incrementPC(int amount);
   int readReg(int reg);
   int readWord(int address);
   void writeWord(int address, int value);
@@ -35,8 +37,10 @@ public:
   unsigned long read_rs1(instruction* instr);
   unsigned long read_rs2(instruction* instr);
   unsigned long read_imm(instruction* instr);
+  unsigned long read_branchImm(instruction* instr);
   unsigned long read_swOffset(instruction* instr);
   int ALUOperation(int operand1, int operand2);
+  int ALU_LT(int ALUResult);
   void store(instruction* instr, int ALUResult);
 };
 
