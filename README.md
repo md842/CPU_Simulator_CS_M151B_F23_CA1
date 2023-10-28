@@ -3,7 +3,7 @@ This repository contains a C++ solution to Computer Assignment 1 for UCLA CS M15
 
 The implementation follows the datapath depicted below, starting at PC:
 
-![Datapath diagram](Datapath.jpg)
+![Datapath diagram](/src/Datapath.jpg)
 
 ## Running
 Navigate to the directory containing the extracted implementation, then simply run `make` with the included Makefile.
