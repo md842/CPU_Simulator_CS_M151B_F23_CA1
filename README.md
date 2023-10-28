@@ -1,5 +1,9 @@
 # CPU Simulator: UCLA CS M151B Fall 2023 Computer Assignment 1
-This repository contains a C++ solution to Computer Assignment 1 for UCLA CS M151B Fall 2023, a simulator of a 32-bit RISC-V processor that implements 10 instructions: ADD, SUB, ADDI, XOR, ANDI, SRA, LW, SW, BLT, and JALR.
+This repository contains a C++ solution to Computer Assignment 1 for UCLA CS M151B Fall 2023, a simulator of a 32-bit single cycle RISC-V processor that implements 10 instructions: ADD, SUB, ADDI, XOR, ANDI, SRA, LW, SW, BLT, and JALR.
+
+The implementation follows the datapath depicted below, starting at PC:
+
+![Datapath diagram](Datapath.jpg)
 
 ## Running
 Navigate to the directory containing the extracted implementation, then simply run `make` with the included Makefile.
