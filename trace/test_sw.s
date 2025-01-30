@@ -10,7 +10,3 @@ add x5, x5, x4
 sw x5, 4, x2
 lw x10, 8, x0
 lw x11, 4, x2
-
-
-
-    

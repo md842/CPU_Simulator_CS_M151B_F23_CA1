@@ -7,10 +7,3 @@ add x6, x4,x3
 andi x7,x4, 3
 sub x10, x7,x4
 add x11, x6,x3
-
-
-
-
-
-
-    

@@ -10,67 +10,66 @@
 
 using namespace std;
 
-/*
-Add all the required standard and developed libraries here
-*/
 
-/*
-Put/Define any helper function/definitions you need here
-*/
 int main(int argc, char* argv[]){
-	/* This is the front end of your project.
-	You need to first read the instructions that are stored in a file and load them into an instruction memory.
-	*/
+	// Read the program (specified in args) into instruction memory.
 
-	/* Each cell should store 1 byte. You can define the memory either dynamically, or define it as a fixed size with size 4KB (i.e., 4096 lines). Each instruction is 32 bits (i.e., 4 lines, saved in little-endian mode).
-	Each line in the input file is stored as an unsigned char and is 1 byte (each four lines are one instruction). You need to read the file line by line and store it into the memory. You may need a mechanism to convert these values to bits so that you can read opcodes, operands, etc.
-	*/
+  // 4KB instruction memory; each instruction is 32 bits (little-endian)
+	bitset<8> instMem[4096]; // Each cell represents one byte
 
-	bitset<8> instMem[4096];
+	if (argc < 2) // No program specified
+		return -1;
 
-
-	if (argc < 2) { // No file name entered
+	ifstream infile(argv[1]); // Open program specified in args
+	if (!(infile.is_open() && infile.good())){
+		cout << "Error opening file!" << endl;
 		return -1;
 	}
 
-	ifstream infile(argv[1]); // Open file specified in args
-	if (!(infile.is_open() && infile.good())) {
-		cout << "Error opening file!" << endl;
-		return 0; 
-	}
-	string line; 
-	int i = 0;
-	while (infile) {
+	string line;
+  string hexInput;
+  unsigned short convertedByte;
+
+  // Read entire program from file (ignores spaces, newlines, etc.)
+  while (infile){
     infile >> line;
-    stringstream line2(line);
-    int x; 
-    line2 >> x;
-    instMem[i] = bitset<8>(x);
-    i++;
+    hexInput += line;
   }
-	int maxPC= i; 
 
-	/* Instantiate your CPU object here.  CPU class is the main class in this project that defines different components of the processor.
-	CPU class also has different functions for each stage (e.g., fetching an instruction, decoding, etc.).
-	*/
+  cout << "Hex input: " << hexInput << " (length " << hexInput.length() << ")" << endl;
 
-	CPU myCPU;  // call the approriate constructor here to initialize the processor...  
-	// make sure to create a variable for PC and resets it to zero (e.g., unsigned int PC = 0); 
+  // Parse entire program, two hex digits (one byte) at a time
+	for (int i = 0; i * 2 < hexInput.length(); i++){
+    string byte = hexInput.substr(i * 2, 2); // Get current hex byte
 
-	/* OPTIONAL: Instantiate your Instruction object here. */
-	//Instruction myInst; 
+    // Convert hex byte to unsigned short
+    istringstream convert(byte);
+    convert >> hex >> convertedByte;
+
+    // Convert unsigned short to binary and store in instruction memory
+    cout << "byte: " << byte << "; bitset<8>(byte): " << bitset<8>(convertedByte) << endl;
+    instMem[i] = bitset<8>(convertedByte);
+  }
+
+	int maxPC = hexInput.length() / 2; 
+
+	/* The CPU class defines different components of the processor and has
+     functions for each stage of the execution pipeline (e.g., fetching an
+     instruction, decoding, etc.). */
+	CPU myCPU;
+
 	bitset<32> curr;
 	instruction instr = instruction(curr);
 	bool done = true;
   int clockCycles = 0;
-	while (done == true) // processor's main loop. Each iteration is equal to one clock cycle.  
-	{
+
+	while (done == true){ // CPU main loop. Each iteration is one clock cycle.
     clockCycles++;
-		// Fetch
+		// Fetch stage
 		curr = myCPU.Fetch(instMem); // fetching the instruction
 		instr = instruction(curr);
 
-		// Decode
+		// Decode stage
 		done = myCPU.Decode(&instr); // True if valid instruction, false if opcode 0
 		if (done == false) // break from loop so stats are not mistakenly updated
 			break;
@@ -174,8 +173,10 @@ int main(int argc, char* argv[]){
 		if (myCPU.readPC() > maxPC)
 			break;
 	}
+
 	int a0 = myCPU.readReg(10); // Read a0 register
 	int a1 = myCPU.readReg(11); // Read a1 register
+
   cerr << endl << "Output: ";
 	// print the results (you should replace a0 and a1 with your own variables that point to a0 and a1)
 	  cout << "(" << a0 << "," << a1 << ")" << endl;
