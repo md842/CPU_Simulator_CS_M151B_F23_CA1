@@ -1,81 +1,69 @@
-#include "CPU.h"
-
 #include <iostream>
 #include <bitset>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
 #include <fstream>
 #include <sstream>
 
-using namespace std;
+#include "CPU.h"
 
 
 int main(int argc, char* argv[]){
 	// Read the program (specified in args) into instruction memory.
 
   // 4KB instruction memory; each instruction is 32 bits (little-endian)
-	bitset<8> instMem[4096]; // Each cell represents one byte
+	std::bitset<8> instMem[4096]; // Each cell represents one byte
 
 	if (argc < 2) // No program specified
 		return -1;
 
-	ifstream infile(argv[1]); // Open program specified in args
-	if (!(infile.is_open() && infile.good())){
-		cout << "Error opening file!" << endl;
+	std::ifstream inFile(argv[1]); // Open program specified in args
+	if (!(inFile.is_open() && inFile.good())){
+		std::cout << "Error opening file!" << std::endl;
 		return -1;
 	}
 
-	string line;
-  string hexInput;
+	std::string token;
+  std::string hexInput;
   unsigned short convertedByte;
 
-  // Read entire program from file (ignores spaces, newlines, etc.)
-  while (infile){
-    infile >> line;
-    hexInput += line;
+  /* Read entire program from file token by token. The advantage of this
+     approach is that spaces and/or newlines in the input do not matter. */
+  while (inFile){
+    inFile >> token;
+    hexInput += token;
   }
-
-  cout << "Hex input: " << hexInput << " (length " << hexInput.length() << ")" << endl;
 
   // Parse entire program, two hex digits (one byte) at a time
-	for (int i = 0; i * 2 < hexInput.length(); i++){
-    string byte = hexInput.substr(i * 2, 2); // Get current hex byte
+	for (unsigned short i = 0; i * 2 < hexInput.length(); i++){
+    std::string byte = hexInput.substr(i * 2, 2); // Get current hex byte
 
     // Convert hex byte to unsigned short
-    istringstream convert(byte);
-    convert >> hex >> convertedByte;
+    std::istringstream convert(byte);
+    convert >> std::hex >> convertedByte;
 
     // Convert unsigned short to binary and store in instruction memory
-    cout << "byte: " << byte << "; bitset<8>(byte): " << bitset<8>(convertedByte) << endl;
-    instMem[i] = bitset<8>(convertedByte);
+    instMem[i] = std::bitset<8>(convertedByte);
   }
-
-	int maxPC = hexInput.length() / 2; 
+	unsigned short maxPC = hexInput.length() / 2; 
 
 	/* The CPU class defines different components of the processor and has
      functions for each stage of the execution pipeline (e.g., fetching an
      instruction, decoding, etc.). */
 	CPU myCPU;
 
-	bitset<32> curr;
-	instruction instr = instruction(curr);
-	bool done = true;
   int clockCycles = 0;
+	while (true){ // CPU's main execution loop
+    clockCycles++; // Each iteration is one clock cycle
 
-	while (done == true){ // CPU main loop. Each iteration is one clock cycle.
-    clockCycles++;
 		// Fetch stage
-		curr = myCPU.Fetch(instMem); // fetching the instruction
-		instr = instruction(curr);
+		std::bitset<32> curr = myCPU.Fetch(instMem); // Fetch the instruction
+		instruction instr = instruction(curr);
 
 		// Decode stage
-		done = myCPU.Decode(&instr); // True if valid instruction, false if opcode 0
-		if (done == false) // break from loop so stats are not mistakenly updated
+		if (!myCPU.Decode(&instr)) // True if valid instruction, false if opcode 0
 			break;
       
-		// Operands
-    bitset<6> controlSignals = myCPU.readControl();
+		// Decode operands and destination from the instruction and control signals
+    std::bitset<6> controlSignals = myCPU.readControl();
     // Bit 5: RegWrite
     // Bit 4: AluSrc
     // Bit 3: Branch
@@ -91,16 +79,13 @@ int main(int argc, char* argv[]){
 
     // The following if statement acts as the AND gate with Branch control signal
     if (controlSignals[3]){ // Branch = 1
-
       // This if/else block acts as the mux on ALU input 2
-      if (controlSignals[4]){ // AluSrc = 1
+      if (controlSignals[4]) // AluSrc = 1
         // jalr instruction
         operand2 = myCPU.read_imm(&instr);
-      }
-      else{ // AluSrc = 0
+      else // AluSrc = 0
         // blt instruction
         operand2 = myCPU.read_rs2(&instr);
-      }
       // End of mux on ALU input 2
     }
 
@@ -112,29 +97,25 @@ int main(int argc, char* argv[]){
       }
       else{ // MemRe = 0
         // This if/else block acts as the mux on ALU input 2
-        if (controlSignals[4]){ // AluSrc = 1
+        if (controlSignals[4]) // AluSrc = 1
           // i-type instruction
           operand2 = myCPU.read_imm(&instr);
-        }
-        else{ // AluSrc = 0
+        else // AluSrc = 0
           // r-type instruction
           operand2 = myCPU.read_rs2(&instr);
-        }
         // End of mux on ALU input 2
       }
     }
     
-    else{ // RegWrite = 0
+    else // RegWrite = 0
       // sw instruction
       operand2 = myCPU.read_swOffset(&instr);
-    }
 
-    // ALU
+    // Perform ALU operation
     int ALUResult = myCPU.ALUOperation(operand1, operand2);
     int toStore = ALUResult;
-    if (ALUDmemMux){ // 1: Use ALU result as data memory address, store read data to RegFile
+    if (ALUDmemMux) // 1: Use ALU result as data memory address, store read data to RegFile
       toStore = myCPU.readWord(ALUResult);
-    }
 
     // Store results
     bool LT = true;
@@ -157,10 +138,9 @@ int main(int argc, char* argv[]){
     // Update PC
     // This if statement acts as the mux on the input of PC; the other input (PC + 4 was defined within CPU::Fetch())
     if (controlSignals[3]){ // Branch = 1
-      if (controlSignals[4]){ // AluSrc = 1
+      if (controlSignals[4]) // AluSrc = 1
         // jalr instruction
         myCPU.writePC(ALUResult);
-      }
       else{
         // blt instruction
         if (LT) // If LT output on ALU = 1
@@ -169,17 +149,12 @@ int main(int argc, char* argv[]){
     }
     // End of mux on input of PC
 		
-		// Sanity Check
-		if (myCPU.readPC() > maxPC)
+		if (myCPU.readPC() > maxPC) // Sanity check
 			break;
 	}
 
-	int a0 = myCPU.readReg(10); // Read a0 register
-	int a1 = myCPU.readReg(11); // Read a1 register
-
-  cerr << endl << "Output: ";
-	// print the results (you should replace a0 and a1 with your own variables that point to a0 and a1)
-	  cout << "(" << a0 << "," << a1 << ")" << endl;
-	cerr << "Total clock cycles: " << clockCycles << endl;
+  std::cout << "Register a0 (x10): " << myCPU.readReg(10) << std::endl;
+  std::cout << "Register a1 (x11): " << myCPU.readReg(11) << std::endl;
+	std::cout << "Total clock cycles: " << clockCycles << std::endl;
 	return 0;
 }

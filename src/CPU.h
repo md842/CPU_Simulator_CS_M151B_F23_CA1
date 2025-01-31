@@ -1,17 +1,13 @@
 #include <iostream>
 #include <bitset>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
 
 #include "ALU.h"
 
-using namespace std;
 
 class instruction {
 public:
-	bitset<32> instr; //instruction
-	instruction(bitset<32> fetch); // constructor
+	std::bitset<32> instr; // instruction
+	instruction(std::bitset<32> fetch); // constructor
 };
 
 class CPU {
@@ -20,8 +16,8 @@ private:
   ALU myALU; // ALU
 	char dmemory[4096]; // Data memory, byte addressable in little endian fashion
 	unsigned long PC; // PC
-  bitset<6> controller; // Controller
-  bitset<4> ALUOp;
+  std::bitset<6> controller; // Controller
+  std::bitset<4> ALUOp;
 
 public:
 	CPU();
@@ -31,9 +27,9 @@ public:
   int readReg(int reg);
   int readWord(int address);
   void writeWord(int address, int value);
-	bitset<32> Fetch(bitset<8> *instmem);
+	std::bitset<32> Fetch(std::bitset<8> *instmem);
 	bool Decode(instruction* instr);
-  bitset<6> readControl();
+  std::bitset<6> readControl();
   unsigned long read_rs1(instruction* instr);
   unsigned long read_rs2(instruction* instr);
   unsigned long read_imm(instruction* instr);
@@ -43,5 +39,3 @@ public:
   int ALU_LT(int ALUResult);
   void store(instruction* instr, int ALUResult);
 };
-
-// add other functions and objects here
